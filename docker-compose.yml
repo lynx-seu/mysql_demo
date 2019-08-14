@@ -1,0 +1,43 @@
+version: '3.7'
+
+services:
+  mysql:
+    image: mysql
+    command: --default-authentication-plugin=mysql_native_password
+    restart: always
+    ports:
+      - 3306:3306
+    volumes:
+      - ./mysql/data:/var/lib/mysql
+      - ./mysql/conf.d:/etc/mysql/conf.d:ro
+    environment:
+      MYSQL_ROOT_PASSWORD: 'example'
+      MYSQL_USER: 'lynx94'
+      MYSQL_PASSWORD: 'test123'
+      MYSQL_DATABASE: 'base'
+    security_opt:
+        - seccomp:unconfined
+
+  mysql-exporter:
+    image: prom/mysqld-exporter
+    environment:
+      DATA_SOURCE_NAME: "lynx94:test123@(mysql:3306)/base"
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./prometheus/data:/prometheus
+
+  grafana:
+    image: grafana/grafana
+    #privileged: true
+    volumes:
+      - ./grafana/grafana.ini:/etc/grafana/grafana.ini:ro
+      - ./grafana/data:/var/lib/grafana:rw
+      - ./grafana/logs:/var/log/grafana:rw
+    ports:
+      - 3000:3000
+
